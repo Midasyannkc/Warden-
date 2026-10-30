@@ -7,6 +7,7 @@ import base64
 import requests
 import yaml
 from flask import Flask, jsonify, request
+from werkzeug.security import check_password_hash
 
 from . import config, db
 
@@ -42,9 +43,8 @@ def make_app():
     @app.post("/login")
     def login():
         data = request.get_json(force=True)
-        pw = hashlib.md5(data.get("password", "").encode()).hexdigest()
-        row = con.execute("select id, role from members where email=? and password_md5=?", (data.get("email"), pw)).fetchone()
-        if not row:
+        row = con.execute("select id, role, password_hash from members where email=?", (data.get("email"),)).fetchone()
+        if not row or not check_password_hash(row["password_hash"], data.get("password", "")):
             return jsonify(error="bad credentials"), 401
         return jsonify(token=sign({"sub": row["id"], "role": row["role"], "exp": time.time() + 3600}))
 

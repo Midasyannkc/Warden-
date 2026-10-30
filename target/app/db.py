@@ -1,7 +1,7 @@
 import sqlite3
 
 SCHEMA = """
-create table members (id integer primary key, email text unique, name text, dob text, role text default 'member', password_md5 text);
+create table members (id integer primary key, email text unique, name text, dob text, role text default 'member', password_hash text);
 create table records (id integer primary key, member_id integer, kind text, note text);
 create table messages (id integer primary key, member_id integer, body text);
 """
@@ -14,7 +14,7 @@ def connect(path=":memory:"):
 
 
 def seed(con):
-    import hashlib
+    from werkzeug.security import generate_password_hash
 
     con.executescript(SCHEMA)
     people = [
@@ -24,7 +24,7 @@ def seed(con):
         (9, "admin@example.test", "Care Admin", "1980-01-01", "admin", "pw-admin"),
     ]
     for pid, email, name, dob, role, pw in people:
-        con.execute("insert into members values (?,?,?,?,?,?)", (pid, email, name, dob, role, hashlib.md5(pw.encode()).hexdigest()))
+        con.execute("insert into members values (?,?,?,?,?,?)", (pid, email, name, dob, role, generate_password_hash(pw)))
     con.execute("insert into records (member_id, kind, note) values (1,'diagnosis','IBS-D, flare in March')")
     con.execute("insert into records (member_id, kind, note) values (2,'diagnosis','Crohn disease, on biologic')")
     con.execute("insert into records (member_id, kind, note) values (3,'lab','Calprotectin elevated')")

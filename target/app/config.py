@@ -1,9 +1,16 @@
-"""Settings for the CareLoop member API (a fictional GI care platform)."""
+"""Settings for the CareLoop member API (a fictional GI care platform).
+
+Secrets come from the environment (in production, injected from a secrets manager)."""
 import os
 
-# Documented example credentials from the AWS docs, kept here on purpose as a seeded flaw.
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
-AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-JWT_SECRET = "careloop-signing-key-2024"
+
+def _required(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(f"{name} must be set")
+    return value
+
+
+JWT_SECRET = _required("CARELOOP_JWT_SECRET")
 DB_PATH = os.environ.get("CARELOOP_DB", ":memory:")
 VENDOR_WEBHOOK = "https://hooks.example-vendor.test/ingest"
