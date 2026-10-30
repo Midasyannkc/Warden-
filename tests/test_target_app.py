@@ -46,3 +46,21 @@ def test_admin_search_still_finds_members_by_name():
 def test_member_cannot_search_the_member_directory():
     c = client()
     assert c.get("/search", query_string={"q": "a"}, headers=as_member(c)).status_code == 403
+
+
+def test_member_cannot_export_the_member_table():
+    c = client()
+    r = c.get("/admin/export", headers=as_member(c))
+    assert r.status_code == 403 and b"admin@example.test" not in r.data
+
+
+def test_admin_can_export():
+    c = client()
+    r = c.get("/admin/export", headers=as_admin(c))
+    assert r.status_code == 200 and len(r.get_json()["members"]) == 4
+
+
+def test_debug_endpoint_does_not_exist_and_leaks_nothing():
+    c = client()
+    r = c.get("/debug")
+    assert r.status_code == 404 and b"PATH" not in r.data and b"careloop-signing-key" not in r.data
