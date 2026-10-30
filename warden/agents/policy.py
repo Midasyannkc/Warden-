@@ -67,3 +67,8 @@ def authorize(call: Call, grant: Grant, session_member: int, *, layers=("authz",
     if "provenance" in layers and call.origin == "document" and t in STATE_CHANGING:
         return False, "state-changing action planned from untrusted content needs human confirmation"
     return True, "ok"
+
+# A grant for a summarizer wired to a vendor LLM gateway. The host is allowed; PHI must still not leave.
+VENDOR_SUMMARIZER = Grant("vendor-summarizer", {"member:read:self", "email:send:internal", "http:post:vendor"},
+                          ("careloop.test",), ("api.vendor-llm.test",))
+GRANTS = {"default": SUMMARIZER, "vendor": VENDOR_SUMMARIZER}

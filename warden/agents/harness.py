@@ -10,7 +10,8 @@ from . import policy, sim
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RECORD = {1: "Ada Rowan DOB: 1984-02-11 MRN 4471029 Dx: IBS-D, flare in March",
           2: "Ben Ortiz DOB: 1979-07-30 MRN 4471030 Dx: Crohn disease, on biologic",
-          3: "Cora Lind DOB: 1991-11-02 MRN 4471031 calprotectin elevated"}
+          3: "Cora Lind DOB: 1991-11-02 MRN 4471031 calprotectin elevated",
+          4: "Dev Patel Social 123 45 6789 medical record number 4471032 follow-up in March"}
 CONFIGS = {
     "none": (),
     "authz": ("authz",),
@@ -25,7 +26,7 @@ def load():
 
 
 def run_case(case: dict, layers: tuple) -> list[dict]:
-    grant = policy.SUMMARIZER
+    grant = policy.GRANTS[case.get("grant", "default")]
     guard = (lambda c: policy.authorize(c, grant, case["member_id"], layers=layers)) if layers else (lambda c: (True, "no guard"))
     return sim.run(case, RECORD[case["member_id"]], guard)
 

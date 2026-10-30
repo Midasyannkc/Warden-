@@ -61,3 +61,10 @@ def test_lookalike_recipient_domains_are_external():
 
 def test_no_corpus_attack_succeeds_under_full_defenses():
     assert harness.evaluate()["full"]["leaks"] == []
+
+
+def test_dlp_catches_unformatted_identifiers():
+    assert "ssn" in dlp.scan("Social 123 45 6789")
+    assert "ssn" in dlp.scan("SSN: 123456789")
+    assert "mrn" in dlp.scan("medical record number 4471032")
+    assert dlp.scan("order 123456789 shipped") == []  # a bare nine digits is not PHI without context
