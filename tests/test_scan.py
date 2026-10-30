@@ -29,3 +29,13 @@ def test_remediated_tree_has_no_secret_findings(scan_findings):
 
 def test_allowlist_does_not_hide_real_secrets(baseline_findings):
     assert sum(1 for f in baseline_findings if f.category == "hardcoded-secret") >= 4
+
+
+def test_custom_rules_catch_the_access_control_flaws(baseline_findings):
+    """SAST usually misses authorization bugs; these rules exist so that the two most important
+    flaws in the app (BOLA and an admin route with no role check) are caught by a tool, not only by review."""
+    by_cat = {}
+    for f in baseline_findings:
+        by_cat.setdefault(f.category, []).append(f)
+    assert len(by_cat.get("broken-object-authorization", [])) == 2
+    assert len(by_cat.get("missing-function-authorization", [])) == 1
