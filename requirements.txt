@@ -1,0 +1,12 @@
+pytest
+bandit
+semgrep
+checkov
+detect-secrets
+moto[iam,s3,sts,cloudtrail]
+boto3
+flask
+requests
+PyYAML
+cryptography
+jsonschema

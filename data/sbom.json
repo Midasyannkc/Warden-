@@ -1,0 +1,13 @@
+{
+  "_note": "Synthetic software bill of materials for the fictional CareLoop platform. Component and CVE pairings are real public CVEs; CVSS scores are author-entered from public advisories and should be re-verified before any real use.",
+  "components": [
+    {"name": "log4j-core", "version": "2.14.1", "service": "member-api", "exposure": "internet", "cve": "CVE-2021-44228", "cvss": 10.0},
+    {"name": "spring-beans", "version": "5.3.17", "service": "scheduling-service", "exposure": "internal", "cve": "CVE-2022-22965", "cvss": 9.8},
+    {"name": "tomcat-embed-core", "version": "9.0.98", "service": "member-api", "exposure": "internet", "cve": "CVE-2025-24813", "cvss": 9.8},
+    {"name": "jenkins", "version": "2.441", "service": "ci", "exposure": "internal", "cve": "CVE-2024-23897", "cvss": 9.8},
+    {"name": "openssl", "version": "1.0.1f", "service": "legacy-report-batch", "exposure": "internal", "cve": "CVE-2014-0160", "cvss": 7.5},
+    {"name": "redis", "version": "5.0.7", "service": "session-cache", "exposure": "internal", "cve": "CVE-2022-0543", "cvss": 10.0},
+    {"name": "lodash", "version": "4.17.20", "service": "member-web", "exposure": "internet", "cve": "CVE-2021-23337", "cvss": 7.2},
+    {"name": "requests", "version": "2.32.3", "service": "member-api", "exposure": "internet", "cve": null, "cvss": null}
+  ]
+}
