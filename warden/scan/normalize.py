@@ -36,9 +36,9 @@ CHECKOV_CATEGORY = {
     "CKV2_AWS_30": "rds-logging", "CKV_AWS_129": "rds-logging", "CKV_AWS_118": "rds-monitoring", "CKV_AWS_353": "rds-monitoring",
     "CKV_AWS_161": "rds-iam-auth", "CKV2_AWS_40": "iam-privilege-escalation", "CKV_AWS_226": "rds-resilience",
     "CKV_AWS_293": "rds-resilience", "CKV2_AWS_60": "rds-resilience", "CKV2_AWS_61": "s3-versioning", "CKV2_AWS_62": "s3-logging",
-    "CKV_AWS_144": "s3-versioning", "CKV2_AWS_5": "sg-hygiene", "CKV_AWS_23": "sg-hygiene", "CKV_AWS_382": "open-egress",
+    "CKV_AWS_144": "s3-versioning", "CKV_AWS_252": "cloudtrail-hygiene", "CKV2_AWS_10": "cloudtrail-hygiene", "CKV2_AWS_64": "kms-policy", "CKV2_AWS_5": "sg-hygiene", "CKV_AWS_23": "sg-hygiene", "CKV_AWS_382": "open-egress",
 }
-LOW = {"sg-hygiene", "rds-monitoring", "rds-resilience", "rds-multiaz", "s3-versioning"}
+LOW = {"cloudtrail-hygiene", "kms-policy", "sg-hygiene", "rds-monitoring", "rds-resilience", "rds-multiaz", "s3-versioning"}
 
 
 def secret_key(line: int) -> str:
