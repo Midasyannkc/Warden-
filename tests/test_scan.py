@@ -20,3 +20,12 @@ def test_secret_scanner_works_outside_a_git_tree(tmp_path):
     (d / "leak.py").write_text('aws_secret_access_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"\n')
     raw = runner.secrets_scan(str(tmp_path), "target")
     assert raw["results"], "a planted credential must be found even when the directory is not a repository"
+
+
+def test_remediated_tree_has_no_secret_findings(scan_findings):
+    leaked = [(f.file, f.line, f.rule) for f in scan_findings if f.category == "hardcoded-secret"]
+    assert leaked == [], "the remediated target should be clean; an allowlist belongs on a verified false positive only"
+
+
+def test_allowlist_does_not_hide_real_secrets(baseline_findings):
+    assert sum(1 for f in baseline_findings if f.category == "hardcoded-secret") >= 4

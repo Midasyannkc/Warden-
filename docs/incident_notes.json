@@ -1,0 +1,98 @@
+[
+ {
+  "n": 1,
+  "title": "One hardcoded secret reported by two scanners counted twice",
+  "found": "vulnerability-management test on real scanner output",
+  "detail": "Bandit and detect-secrets both flagged the same credential but with different rule names and hashes, so dedupe kept both and the secret count was inflated (6 findings for 4 real locations). A secret is now identified by file and line, which the tools agree on."
+ },
+ {
+  "n": 2,
+  "title": "Catch-all CODEOWNERS rule listed last disabled every security-owner rule",
+  "found": "SDLC gate tests",
+  "detail": "GitHub applies the last matching CODEOWNERS pattern, so a `*` rule at the bottom reassigned every path, including the gate itself and the Terraform, to the general engineering team. The file is reordered and a lint now reports any rule shadowed by a later catch-all."
+ },
+ {
+  "n": 3,
+  "title": "Clawback crashed on a revert conflict and skipped credential rotation",
+  "found": "clawback drill test with a later human edit",
+  "detail": "When a human had edited the same lines after the AI commit, git revert failed, the procedure raised, and the exposed keys were never rotated. A conflicted revert is now aborted cleanly, reported as a conflict for a human, and every other step still runs."
+ },
+ {
+  "n": 4,
+  "title": "Lookalike recipient domains passed the internal-domain check and skipped DLP",
+  "found": "prompt injection harness",
+  "detail": "The recipient check used a string suffix, so `hr@notcareloop.test` counted as internal, and because internal mail skips DLP the PHI left unscanned. The domain after the last @ is now matched exactly or as a true subdomain."
+ },
+ {
+  "n": 5,
+  "title": "PHI written as 'Social 123 45 6789' or 'medical record number' slipped past DLP",
+  "found": "prompt injection harness, vendor egress case",
+  "detail": "The DLP patterns only matched dashed SSNs and the literal prefix MRN, so an allowlisted vendor host received a member's identifiers. Labeled and spaced forms are now recognized, while a bare nine digit number with no label is still ignored to avoid false positives."
+ },
+ {
+  "n": 6,
+  "title": "Burst alerts stopped at the threshold and undercounted PHI objects read",
+  "found": "detection scoring against labelled events",
+  "detail": "The window logic returned the first 50 events of a 60 object read, so the alert understated the scope of an exfiltration. That number drives breach assessment, so the alert now lists every event in any qualifying window (recall 83.5 percent to 100 percent)."
+ },
+ {
+  "n": 7,
+  "title": "Scanner categories with no control mapping made controls look clean",
+  "found": "control-map test against real scans",
+  "detail": "Twenty raw Checkov rule ids had no HIPAA mapping, so a control could show no open findings while a gap existed. Every category is now mapped, and the test fails if any new scanner output falls through."
+ },
+ {
+  "n": 8,
+  "title": "Any signed-in member could read any other member's record and messages (BOLA)",
+  "found": "exploit test, and the custom Semgrep rule",
+  "detail": "`/members/<id>` looked up the id from the URL without comparing it to the signed-in member. Both routes now return 403 unless the token subject matches."
+ },
+ {
+  "n": 9,
+  "title": "SQL injection in member search, and directory search open to every member",
+  "found": "exploit test, Bandit B608, custom Semgrep rule",
+  "detail": "The search term was formatted into the SQL string. It is now a bound parameter, and the directory search is restricted to admins since a member has no reason to enumerate other members."
+ },
+ {
+  "n": 10,
+  "title": "Export endpoint had no role check and a debug endpoint dumped the environment",
+  "found": "exploit test",
+  "detail": "`/admin/export` only checked that a token existed, and `/debug` returned every environment variable and the signing key. Export now requires the admin role and the debug route is removed."
+ },
+ {
+  "n": 11,
+  "title": "YAML import could construct Python objects and the vendor call skipped TLS verification",
+  "found": "Bandit B506 and B501, exploit test",
+  "detail": "`yaml.load` with the full loader evaluated a tag that called a Python function, and `verify=False` allowed interception of PHI sent to a vendor. The code uses `yaml.safe_load` and verifies TLS with a timeout."
+ },
+ {
+  "n": 12,
+  "title": "Credentials committed in source and passwords stored as unsalted MD5",
+  "found": "detect-secrets, Bandit B105 and B324",
+  "detail": "AWS example keys, the signing secret and an MD5 password column were in the repository. Secrets now come from the environment and the service refuses to start without them; passwords use salted scrypt."
+ },
+ {
+  "n": 13,
+  "title": "Tokens never expired and the signature was compared with !=",
+  "found": "code review, exploit test with a shifted clock",
+  "detail": "The token carried an exp claim that nothing checked, and the HMAC was compared with a normal string comparison. Expiry is enforced and the comparison is constant time."
+ },
+ {
+  "n": 14,
+  "title": "Terraform exposed PHI storage, the database and the cluster and granted Action * on *",
+  "found": "Checkov (44 failed checks)",
+  "detail": "A public S3 ACL, unencrypted public database, SSH open to the world, a public EKS endpoint without logging, a wildcard IAM policy and no CloudTrail. The rewrite is private, encrypted with a rotated KMS key, scoped to least privilege and audited, and Checkov findings fall from 44 to 10."
+ },
+ {
+  "n": 15,
+  "title": "The secret scanner silently found nothing outside a git work tree",
+  "found": "baseline scan from a scratch checkout",
+  "detail": "detect-secrets lists files with git ls-files, so scanning an exported archive or CI scratch directory printed nothing and exited 0, which looked like a clean result. The scan now uses --all-files, and the cache key includes how the tools are invoked so old empty results cannot be reused."
+ },
+ {
+  "n": 16,
+  "title": "Secret scanner flagged a Terraform boolean as a credential",
+  "found": "remediated-tree scan",
+  "detail": "detect-secrets' keyword detector matched `manage_master_user_password = true`, so the clean tree still carried a high-severity secret finding and the report could never reach zero secrets. The line carries an inline allowlist with a reason, scoped to that one line, and a test confirms the real seeded secrets in the baseline are still found."
+ }
+]
