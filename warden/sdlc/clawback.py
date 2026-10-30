@@ -44,13 +44,19 @@ def run(repo, base, iam, agent_user, exposed_users, check_cmd, branch="clawback/
     evidence.append(revoke_agent(iam, agent_user))
     shas = ai_commits(repo, base)
     git(repo, "checkout", "-q", "-b", branch)
-    reverted = []
+    reverted, conflicts = [], []
     for sha in shas:
-        git(repo, "revert", "--no-edit", sha)
-        reverted.append(sha)
-    evidence.append({"step": "revert", "branch": branch, "reverted": reverted})
+        p = subprocess.run(["git", "revert", "--no-edit", sha], cwd=repo, capture_output=True, text=True)
+        if p.returncode:
+            # A later edit touched the same lines. Leave the tree clean and report it for a human;
+            # the rest of the procedure (credential rotation above all) must still run.
+            git(repo, "revert", "--abort", check=False)
+            conflicts.append(sha)
+        else:
+            reverted.append(sha)
+    evidence.append({"step": "revert", "branch": branch, "reverted": reverted, "conflicts": conflicts})
     for u in exposed_users:
         evidence.append({"step": "rotate-exposed", **rotate.rotate_key(iam, u)})
     p = subprocess.run(check_cmd, cwd=repo, shell=True, capture_output=True, text=True)
     evidence.append({"step": "verify", "cmd": check_cmd, "passed": p.returncode == 0})
-    return {"ok": p.returncode == 0, "evidence": evidence}
+    return {"ok": p.returncode == 0 and not conflicts, "evidence": evidence}
