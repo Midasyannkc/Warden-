@@ -16,3 +16,16 @@ def test_login_rejects_bad_password():
 
 def test_unauthenticated_request_is_rejected():
     assert client().get("/members/1").status_code == 401
+
+
+def test_member_cannot_read_another_members_record():
+    c = client()
+    r = c.get("/members/2", headers=as_member(c))
+    assert r.status_code == 403
+    assert b"Crohn" not in r.data
+
+
+def test_member_cannot_read_another_members_messages():
+    c = client()
+    r = c.get("/members/2/messages", headers=as_member(c))
+    assert r.status_code == 403 and b"prescription" not in r.data
