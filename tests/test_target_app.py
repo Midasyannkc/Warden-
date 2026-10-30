@@ -93,3 +93,29 @@ def test_vendor_call_verifies_tls_and_has_a_timeout(monkeypatch):
     r = c.post("/notify", json={"msg": "hi"}, headers=as_member(c))
     assert r.status_code == 200
     assert seen.get("verify", True) is True and seen.get("timeout")
+
+
+def test_no_credentials_in_source():
+    src = open("target/app/config.py").read()
+    for needle in ["AKIA", "wJalrXUtnFEMI", "careloop-signing-key"]:
+        assert needle not in src, needle
+
+
+def test_service_refuses_to_start_without_a_signing_key(monkeypatch):
+    import importlib
+    import pytest
+    from target.app import config
+    monkeypatch.delenv("CARELOOP_JWT_SECRET", raising=False)
+    with pytest.raises(RuntimeError):
+        importlib.reload(config)
+    monkeypatch.setenv("CARELOOP_JWT_SECRET", "test-only-throwaway-value")
+    importlib.reload(config)
+
+
+def test_passwords_are_stored_with_a_slow_salted_hash():
+    c = client()
+    from target.app.main import make_app
+    con = make_app().config["CON"]
+    stored = [r[0] for r in con.execute("select password_hash from members")]
+    assert stored and all(h.startswith(("scrypt:", "pbkdf2:")) for h in stored)
+    assert len(set(stored)) == len(stored)
