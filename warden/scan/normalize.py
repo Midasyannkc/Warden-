@@ -36,13 +36,19 @@ CHECKOV_CATEGORY = {
 }
 
 
+def secret_key(line: int) -> str:
+    """Scanners disagree on rule names and hashes but agree on the line, so a secret is
+    identified by where it sits in the file."""
+    return f"secret@{line}"
+
+
 def bandit(raw: dict) -> list[Finding]:
     out = []
     for r in raw.get("results", []):
         cat = BANDIT_CATEGORY.get(r["test_id"], r["test_id"].lower())
         out.append(Finding("bandit", r["test_id"], BANDIT_SEV.get(r["issue_severity"], "low"), r["issue_text"],
                            r["filename"], r["line_number"], f"CWE-{r['issue_cwe']['id']}" if r.get("issue_cwe") else "",
-                           cat, resource=f"{cat}:{r['line_number'] if cat == 'hardcoded-secret' else ''}"))
+                           cat, resource=secret_key(r["line_number"]) if cat == "hardcoded-secret" else cat))
     return out
 
 
@@ -74,5 +80,5 @@ def detect_secrets(raw: dict) -> list[Finding]:
     for path, hits in raw.get("results", {}).items():
         for h in hits:
             out.append(Finding("detect-secrets", h["type"], "high", f"Possible secret: {h['type']}", path,
-                               h["line_number"], "CWE-798", "hardcoded-secret", resource=f"secret:{path}:{h['hashed_secret'][:8]}"))
+                               h["line_number"], "CWE-798", "hardcoded-secret", resource=secret_key(h["line_number"])))
     return out
