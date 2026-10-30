@@ -100,5 +100,11 @@
   "title": "The custom Semgrep rule for BOLA never matched anything",
   "found": "coverage test over the vulnerable baseline",
   "detail": "The first version of the rule used a route-string wildcard that Semgrep does not support in a decorator, so it silently matched nothing and no tool reported the worst flaw in the app. The rule now matches the route with a metavariable regex and a not-pattern for the ownership check, a second rule covers admin routes with no role check, and a test asserts that exactly the two vulnerable routes and the one admin route are caught on the baseline and nothing is caught on the fixed tree. The baseline is now scanned with the current rules, because scanning it with its own old rules would hide exactly this kind of fix."
+ },
+ {
+  "n": 18,
+  "title": "Report ordering changed between runs",
+  "found": "clean clone verification",
+  "detail": "The recurring-issue list was built from sets and a Counter, so categories with the same count came out in an order that depended on the hash seed, and a fresh clone produced a different report from the committed one. Ties are now ordered by count and then name, and a test runs several hash seeds in separate processes."
  }
 ]
