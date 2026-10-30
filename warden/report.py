@@ -30,6 +30,21 @@ def summarize(findings):
             "by_tool": dict(Counter(f.tool for f in findings)), "categories": sorted({f.category for f in d})}, d
 
 
+def mask_key_ids(x):
+    """moto issues random access key ids and scratch-repo commit hashes depend on the clock. They carry no
+    information, and leaving them in makes the committed evidence differ between runs, so they are replaced
+    with fixed markers."""
+    if isinstance(x, str) and x.startswith("AKIA") and len(x) == 20:
+        return "<access-key-id>"
+    if isinstance(x, str) and len(x) == 40 and all(c in "0123456789abcdef" for c in x):
+        return "<commit>"  # commit hashes in a scratch repo depend on the clock
+    if isinstance(x, list):
+        return [mask_key_ids(i) for i in x]
+    if isinstance(x, dict):
+        return {k: mask_key_ids(v) for k, v in x.items()}
+    return x
+
+
 @mock_aws
 def nhi_section():
     inv, roster = nhi.load("nhi_inventory.json"), nhi.load("hr_roster.json")
@@ -37,7 +52,8 @@ def nhi_section():
     iam = boto3.client("iam", region_name="us-east-1")
     rotate.provision(iam, inv)
     evidence = rotate.remediate(iam, before)
-    gone = {e["user"] for e in evidence if e["action"] == "disable"}
+    evidence = mask_key_ids(evidence)
+    gone = sorted({e["user"] for e in evidence if e["action"] == "disable"})
     after_inv = copy.deepcopy(inv)
     after_inv["identities"] = [i for i in inv["identities"] if i["name"] not in gone]
     after = nhi.analyze_all(after_inv, roster)
@@ -75,7 +91,7 @@ def build() -> dict:
                                      "overdue_on_2026-11-10": [r["rule"] for r in manage.overdue(rows, dt.date(2026, 11, 10))],
                                      "recurring_feedback": manage.feedback(history)},
         "nhi": nhi_sec,
-        "sdlc": {"scenarios": sdlc, "clawback_drill": drill},
+        "sdlc": {"scenarios": sdlc, "clawback_drill": mask_key_ids(drill)},
         "agent_security": agents,
         "vendor_review": [{"vendor": r["vendor"], "verdict": r["verdict"], "summary": vendors.exec_summary(r),
                            "checklist": vendors.engineer_checklist(r)} for r in vend],

@@ -106,5 +106,11 @@
   "title": "Report ordering changed between runs",
   "found": "clean clone verification",
   "detail": "The recurring-issue list was built from sets and a Counter, so categories with the same count came out in an order that depended on the hash seed, and a fresh clone produced a different report from the committed one. Ties are now ordered by count and then name, and a test runs several hash seeds in separate processes."
+ },
+ {
+  "n": 19,
+  "title": "The committed report was different on every run",
+  "found": "clean clone verification, diffing two runs",
+  "detail": "Fresh clones regenerated out/report.json with different random IAM key ids from moto, scratch-repo commit hashes that depend on the clock, and a set-ordered dictionary. Evidence that changes on every run cannot be diffed or reviewed, so volatile values are masked with fixed markers, ordering is sorted, and a test builds the report under two hash seeds in separate processes and requires identical output."
  }
 ]
