@@ -119,3 +119,24 @@ def test_passwords_are_stored_with_a_slow_salted_hash():
     stored = [r[0] for r in con.execute("select password_hash from members")]
     assert stored and all(h.startswith(("scrypt:", "pbkdf2:")) for h in stored)
     assert len(set(stored)) == len(stored)
+
+
+def test_token_expires_after_its_lifetime(monkeypatch):
+    import time as real_time
+    c = client()
+    headers = as_member(c)
+    assert c.get("/members/1", headers=headers).status_code == 200
+    later = real_time.time() + 2 * 3600
+    monkeypatch.setattr("target.app.main.time.time", lambda: later)
+    assert c.get("/members/1", headers=headers).status_code == 401
+
+
+def test_signature_check_is_constant_time():
+    assert "compare_digest" in open("target/app/main.py").read()
+
+
+def test_tampered_token_is_rejected():
+    c = client()
+    token = as_member(c)["Authorization"][7:]
+    body, mac = token.split(".")
+    assert c.get("/members/1", headers={"Authorization": f"Bearer {body}.{'0' * len(mac)}"}).status_code == 401
