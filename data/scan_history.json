@@ -1,0 +1,54 @@
+{
+ "_note": "Synthetic weekly scan history (categories reported per scan) used to demonstrate recurring-issue feedback. Not real scan output.",
+ "scans": [
+  {
+   "week": "2026-09-14",
+   "categories": [
+    "sql-injection",
+    "hardcoded-secret",
+    "broken-object-authorization",
+    "public-s3",
+    "iam-wildcard",
+    "weak-hash"
+   ]
+  },
+  {
+   "week": "2026-09-21",
+   "categories": [
+    "sql-injection",
+    "hardcoded-secret",
+    "public-s3",
+    "tls-verification-disabled",
+    "iam-wildcard"
+   ]
+  },
+  {
+   "week": "2026-09-28",
+   "categories": [
+    "hardcoded-secret",
+    "broken-object-authorization",
+    "public-s3",
+    "unsafe-deserialization"
+   ]
+  },
+  {
+   "week": "2026-10-05",
+   "categories": [
+    "sql-injection",
+    "hardcoded-secret",
+    "broken-object-authorization",
+    "open-ssh",
+    "iam-wildcard"
+   ]
+  },
+  {
+   "week": "2026-10-12",
+   "categories": [
+    "hardcoded-secret",
+    "sql-injection",
+    "unsafe-deserialization",
+    "public-s3"
+   ]
+  }
+ ]
+}
