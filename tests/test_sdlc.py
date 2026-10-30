@@ -89,3 +89,25 @@ def test_trailer_parser_reads_message_footer():
     msg = "Fix thing\n\nBody text.\n\nCo-Authored-By: Claude <x@y.test>\nClaude-Session: https://example.test/s"
     t = gate.trailers_from_message(msg)
     assert t["Co-Authored-By"].startswith("Claude") and "Claude-Session" in t
+
+
+
+def test_sensitive_path_needs_codeowner_approval():
+    p = pr(files=("warden/sdlc/gate.py",), threat_model="TM-14")
+    assert not run(p)["allow"]
+    p["approvals"] = [{"user": "erin", "member_of": ["@careloop/security"]}]
+    assert run(p)["allow"]
+
+
+def test_sensitive_path_needs_threat_model():
+    p = pr(files=("target/infra/main.tf",), approvals=[{"user": "sec", "member_of": ["@careloop/security"]}])
+    r = run(p)
+    assert not r["allow"] and any("threat model" in x for x in r["reasons"])
+
+
+def test_codeowners_last_match_wins():
+    assert codeowners.owners_for(RULES, "warden/sdlc/gate.py") == ["@careloop/security"]
+    assert codeowners.owners_for(RULES, "README.md") == ["@careloop/engineering"]
+    assert codeowners.owners_for(RULES, "target/app/config.py") == ["@careloop/security"]
+    assert codeowners.owners_for(RULES, "target/app/auth_service.py") == ["@careloop/security"]
+    assert codeowners.owners_for(RULES, ".github/workflows/ci.yml") == ["@careloop/security"]
