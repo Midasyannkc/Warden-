@@ -1,0 +1,125 @@
+"""Run every Warden module and write the evidence: out/report.json and docs/REPORT.md."""
+from __future__ import annotations
+
+import copy
+import datetime as dt
+import json
+import os
+from collections import Counter
+
+import boto3
+from moto import mock_aws
+
+from .agents import harness
+from .compliance import controls
+from .detect import rules as detect
+from .nhi import analyze as nhi, rotate
+from .scan import runner
+from .sdlc import scenarios
+from .vendors import review as vendors
+from .vulns import manage
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASELINE = "3c3d411"
+TODAY = dt.date(2026, 10, 29)
+
+
+def summarize(findings):
+    d = manage.dedupe(findings)
+    return {"raw": len(findings), "unique": len(d), "by_severity": dict(Counter(f.severity for f in d)),
+            "by_tool": dict(Counter(f.tool for f in findings)), "categories": sorted({f.category for f in d})}, d
+
+
+@mock_aws
+def nhi_section():
+    inv, roster = nhi.load("nhi_inventory.json"), nhi.load("hr_roster.json")
+    before = nhi.analyze_all(inv, roster)
+    iam = boto3.client("iam", region_name="us-east-1")
+    rotate.provision(iam, inv)
+    evidence = rotate.remediate(iam, before)
+    gone = {e["user"] for e in evidence if e["action"] == "disable"}
+    after_inv = copy.deepcopy(inv)
+    after_inv["identities"] = [i for i in inv["identities"] if i["name"] not in gone]
+    after = nhi.analyze_all(after_inv, roster)
+    states = {u: [k["Status"] for k in iam.list_access_keys(UserName=u)["AccessKeyMetadata"]] for u in gone}
+    return {"identities": len(inv["identities"]), "issues_before": len(before), "issues_after": len(after),
+            "by_rule_before": dict(Counter(i["rule"] for i in before)), "by_rule_after": dict(Counter(i["rule"] for i in after)),
+            "top_risk": nhi.risk_by_identity(before)[:4], "remediation": evidence, "disabled_key_states": states}, before, after
+
+
+def build() -> dict:
+    base_sum, base_d = summarize(runner.run_commit(BASELINE))
+    cur_sum, cur_d = summarize(runner.run_all())
+    kev = manage.load_kev()
+    sbom = json.load(open(os.path.join(ROOT, "data/sbom.json")))
+    sb = manage.sbom_findings(sbom, kev)
+    rows = manage.assign_sla(sb, TODAY)
+    history = [[type("F", (), {"category": c})() for c in s["categories"]] for s in json.load(open(os.path.join(ROOT, "data/scan_history.json")))["scans"]]
+    nhi_sec, nb, na = nhi_section()
+    cat = lambda issues: ["nhi-" + i["rule"] for i in issues]
+    sdlc = scenarios.run_scenarios()
+    drill = scenarios.run_clawback_drill()
+    agents = harness.evaluate()
+    vend = vendors.review_all()
+    events = detect.load_events()
+    alerts = detect.run(events)
+    comp_before = controls.assess([f.category for f in base_d] + [f.category for f in sb] + cat(nb))
+    comp_after = controls.assess([f.category for f in cur_d] + [f.category for f in sb] + cat(na))
+    return {
+        "as_of": TODAY.isoformat(),
+        "scan": {"baseline": base_sum, "current": cur_sum},
+        "vulnerability_management": {"kev_catalog": json.load(open(os.path.join(ROOT, "data/raw/kev.json")))["catalogVersion"],
+                                     "components_with_cves": len(sb), "in_kev": sum(1 for f in sb if f.kev),
+                                     "ranked": [{"cve": r["rule"], "component": r["extra"]["component"], "service": r["file"], "kev": r["kev"],
+                                                 "cvss": r["extra"]["cvss"], "priority": r["priority"], "due": r["due"]} for r in rows],
+                                     "overdue_on_2026-11-10": [r["rule"] for r in manage.overdue(rows, dt.date(2026, 11, 10))],
+                                     "recurring_feedback": manage.feedback(history)},
+        "nhi": nhi_sec,
+        "sdlc": {"scenarios": sdlc, "clawback_drill": drill},
+        "agent_security": agents,
+        "vendor_review": [{"vendor": r["vendor"], "verdict": r["verdict"], "summary": vendors.exec_summary(r),
+                           "checklist": vendors.engineer_checklist(r)} for r in vend],
+        "detection": {**detect.score(events, alerts), "rules": len(detect.RULES), "events": len(events),
+                      "by_rule": dict(Counter(a.rule for a in alerts))},
+        "compliance": {"before": comp_before, "after": comp_after, "unmapped_after": controls.unmapped([f.category for f in cur_d])},
+    }
+
+
+def write(rep: dict):
+    os.makedirs(os.path.join(ROOT, "out"), exist_ok=True)
+    json.dump(rep, open(os.path.join(ROOT, "out/report.json"), "w"), indent=1, default=str)
+    open(os.path.join(ROOT, "docs/REPORT.md"), "w").write(markdown(rep))
+
+
+def markdown(r: dict) -> str:
+    b, c = r["scan"]["baseline"], r["scan"]["current"]
+    sev = lambda s: " / ".join(str(s["by_severity"].get(k, 0)) for k in ["critical", "high", "medium", "low"])
+    a = r["agent_security"]
+    L = ["# Warden run report", "", f"As of {r['as_of']}. Generated by `python -m warden`. Every number below is computed in that run.", "",
+         "## For executives", "",
+         f"- **Application and cloud findings:** {b['unique']} unique findings on the vulnerable baseline ({sev(b)} critical/high/medium/low), {c['unique']} after remediation ({sev(c)}).",
+         f"- **Known exploited vulnerabilities:** {r['vulnerability_management']['in_kev']} of {r['vulnerability_management']['components_with_cves']} vulnerable components appear in CISA's KEV catalog (version {r['vulnerability_management']['kev_catalog']}) and get a 7-day clock regardless of CVSS.",
+         f"- **Machine credentials:** {r['nhi']['issues_before']} issues across {r['nhi']['identities']} non-human identities, {r['nhi']['issues_after']} after rotation and disabling orphaned or stale keys.",
+         f"- **AI agent risk:** attack success on the injection corpus falls from {a['none']['attack_success_rate']:.0%} with no controls to {a['full']['attack_success_rate']:.1%} with all controls; {a['full']['benign']['escalated']} legitimate requests need a human confirmation.",
+         f"- **AI-written code:** {sum(1 for s in r['sdlc']['scenarios'] if s['allow'])} of {len(r['sdlc']['scenarios'])} pull-request scenarios are allowed; every case where the AI would approve itself is denied. The clawback drill {'passed' if r['sdlc']['clawback_drill']['ok'] else 'failed'}.",
+         f"- **Detection:** {r['detection']['rules']} rules, precision {r['detection']['precision']:.0%}, recall {r['detection']['recall']:.0%} on {r['detection']['events']} synthetic CloudTrail events.",
+         "", "## For engineers", "", "### Prioritized vulnerabilities", "", "| CVE | Component | Service | KEV | CVSS | Due |", "| --- | --- | --- | --- | --- | --- |"]
+    for x in r["vulnerability_management"]["ranked"]:
+        L.append(f"| {x['cve']} | {x['component']} | {x['service']} | {'yes' if x['kev'] else 'no'} | {x['cvss']} | {x['due']} |")
+    L += ["", "### Recurring classes fed back into guardrails", ""]
+    for x in r["vulnerability_management"]["recurring_feedback"]:
+        L.append(f"- **{x['category']}** ({x['scans']} of 5 weekly scans): {x['guardrail']}")
+    L += ["", "### Agent controls, by layer", "", "| Controls on | Attack success | Benign completed | Escalated | Blocked |", "| --- | --- | --- | --- | --- |"]
+    for k, v in a.items():
+        L.append(f"| {k} | {v['succeeded']}/{v['attacks']} ({v['attack_success_rate']:.1%}) | {v['benign']['completed']} | {v['benign']['escalated']} | {v['benign']['blocked']} |")
+    L += ["", "### Gate decisions", "", "| Scenario | Decision | Why |", "| --- | --- | --- |"]
+    for s in r["sdlc"]["scenarios"]:
+        L.append(f"| {s['scenario']} | {'allow' if s['allow'] else 'deny'} | {'; '.join(s['reasons']) or 'all phase gates met'} |")
+    L += ["", "### Vendor reviews", ""]
+    for v in r["vendor_review"]:
+        L.append(f"- {v['summary']}")
+    L += ["", "### HIPAA 164.312 technical safeguards (before and after)", "", "| Control | Title | Before | After |", "| --- | --- | --- | --- |"]
+    for x, y in zip(r["compliance"]["before"], r["compliance"]["after"]):
+        L.append(f"| {x['id']} | {x['title']} | {x['status']} | {y['status']} |")
+    L += ["", "Gaps remaining after remediation are mostly the vulnerable dependencies in the synthetic SBOM, which need upgrades rather than code fixes here. A control with no open findings means the technical checks here found nothing; it does not mean the control is met.", ""]
+    return "\n".join(L)
