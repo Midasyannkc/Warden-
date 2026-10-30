@@ -39,3 +39,7 @@ def test_custom_rules_catch_the_access_control_flaws(baseline_findings):
         by_cat.setdefault(f.category, []).append(f)
     assert len(by_cat.get("broken-object-authorization", [])) == 2
     assert len(by_cat.get("missing-function-authorization", [])) == 1
+
+
+def test_fixed_tree_triggers_none_of_the_custom_rules(scan_findings):
+    assert [f for f in scan_findings if f.tool == "semgrep"] == []

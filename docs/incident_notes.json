@@ -44,7 +44,7 @@
  {
   "n": 8,
   "title": "Any signed-in member could read any other member's record and messages (BOLA)",
-  "found": "exploit test, and the custom Semgrep rule",
+  "found": "exploit test (no scanner flagged it until INC-17)",
   "detail": "`/members/<id>` looked up the id from the URL without comparing it to the signed-in member. Both routes now return 403 unless the token subject matches."
  },
  {
@@ -56,7 +56,7 @@
  {
   "n": 10,
   "title": "Export endpoint had no role check and a debug endpoint dumped the environment",
-  "found": "exploit test",
+  "found": "exploit test (no scanner flagged it until INC-17)",
   "detail": "`/admin/export` only checked that a token existed, and `/debug` returned every environment variable and the signing key. Export now requires the admin role and the debug route is removed."
  },
  {
@@ -94,5 +94,11 @@
   "title": "Secret scanner flagged a Terraform boolean as a credential",
   "found": "remediated-tree scan",
   "detail": "detect-secrets' keyword detector matched `manage_master_user_password = true`, so the clean tree still carried a high-severity secret finding and the report could never reach zero secrets. The line carries an inline allowlist with a reason, scoped to that one line, and a test confirms the real seeded secrets in the baseline are still found."
+ },
+ {
+  "n": 17,
+  "title": "The custom Semgrep rule for BOLA never matched anything",
+  "found": "coverage test over the vulnerable baseline",
+  "detail": "The first version of the rule used a route-string wildcard that Semgrep does not support in a decorator, so it silently matched nothing and no tool reported the worst flaw in the app. The rule now matches the route with a metavariable regex and a not-pattern for the ownership check, a second rule covers admin routes with no role check, and a test asserts that exactly the two vulnerable routes and the one admin route are caught on the baseline and nothing is caught on the fixed tree. The baseline is now scanned with the current rules, because scanning it with its own old rules would hide exactly this kind of fix."
  }
 ]

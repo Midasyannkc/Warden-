@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 
@@ -84,8 +85,10 @@ def run_all(root: str = ROOT, target: str = "target", use_cache: bool = True) ->
 
 
 def run_commit(sha: str, use_cache: bool = True) -> list:
-    """Scan the target exactly as it was at a past commit, in a scratch directory."""
+    """Scan the target exactly as it was at a past commit, in a scratch directory, with the
+    current rules. Using the rules from that commit would hide any rule fix."""
     with tempfile.TemporaryDirectory() as td:
-        arc = subprocess.run(["git", "archive", sha, "target", "semgrep_rules"], cwd=ROOT, capture_output=True, check=True)
+        arc = subprocess.run(["git", "archive", sha, "target"], cwd=ROOT, capture_output=True, check=True)
         subprocess.run(["tar", "-x", "-C", td], input=arc.stdout, check=True)
+        shutil.copytree(os.path.join(ROOT, "semgrep_rules"), os.path.join(td, "semgrep_rules"))
         return _normalize(_raw_cached(td, "target", use_cache))

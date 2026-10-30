@@ -2,20 +2,43 @@ rules:
   - id: careloop-missing-ownership-check
     languages: [python]
     severity: ERROR
-    message: Route takes a member id from the URL and queries by it without comparing it to the authenticated user. Broken object level authorization.
+    message: Route takes a member id from the URL and queries by it without comparing it to the authenticated user (broken object level authorization).
     patterns:
       - pattern: |
-          @app.get("/members/<int:member_id>$...")
+          @$APP.get($ROUTE)
           def $F(member_id):
               ...
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: .*<int:member_id>.*
       - pattern-not: |
-          @app.get("/members/<int:member_id>$...")
+          @$APP.get($ROUTE)
           def $F(member_id):
               ...
-              if ... != member_id:
+              if $USER[...] != member_id:
                   ...
               ...
     metadata: { cwe: CWE-639, owasp: A01 }
+  - id: careloop-admin-without-role-check
+    languages: [python]
+    severity: ERROR
+    message: Admin route that never checks the caller's role (broken function level authorization).
+    patterns:
+      - pattern: |
+          @$APP.get($ROUTE)
+          def $F():
+              ...
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: .*/admin/.*
+      - pattern-not: |
+          @$APP.get($ROUTE)
+          def $F():
+              ...
+              if $USER[...] != "admin":
+                  ...
+              ...
+    metadata: { cwe: CWE-285, owasp: A01 }
   - id: careloop-sql-fstring
     languages: [python]
     severity: ERROR
