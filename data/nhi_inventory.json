@@ -1,0 +1,194 @@
+{
+ "_note": "Synthetic non-human identity inventory for the fictional CareLoop estate. Modeled, not exported from a live account.",
+ "as_of": "2026-10-29",
+ "identities": [
+  {
+   "id": "nhi-001",
+   "kind": "iam_user_key",
+   "name": "svc-report-batch",
+   "system": "aws",
+   "owner": "marcus.webb@careloop.test",
+   "created": "2026-07-21",
+   "last_used": "2026-10-26",
+   "policy": {
+    "Statement": [
+     {
+      "Effect": "Allow",
+      "Action": [
+       "s3:GetObject",
+       "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::careloop-reports/*"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nhi-002",
+   "kind": "iam_user_key",
+   "name": "svc-legacy-etl",
+   "system": "aws",
+   "owner": "dev.contractor@agency.test",
+   "created": "2024-05-12",
+   "last_used": "2026-04-02",
+   "policy": {
+    "Statement": [
+     {
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nhi-003",
+   "kind": "iam_role",
+   "name": "app-runtime-role",
+   "system": "aws",
+   "owner": "priya.nair@careloop.test",
+   "created": "2026-01-02",
+   "last_used": "2026-10-29",
+   "policy": {
+    "Statement": [
+     {
+      "Effect": "Allow",
+      "Action": [
+       "s3:*"
+      ],
+      "Resource": "*"
+     },
+     {
+      "Effect": "Allow",
+      "Action": [
+       "iam:PassRole",
+       "iam:CreateAccessKey"
+      ],
+      "Resource": "*"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nhi-004",
+   "kind": "iam_user_key",
+   "name": "svc-ci-deployer",
+   "system": "aws",
+   "owner": "lena.fischer@careloop.test",
+   "created": "2026-06-21",
+   "last_used": "2026-10-28",
+   "policy": {
+    "Statement": [
+     {
+      "Effect": "Allow",
+      "Action": [
+       "eks:DescribeCluster",
+       "ecr:GetAuthorizationToken",
+       "ecr:BatchGetImage"
+      ],
+      "Resource": "*"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nhi-005",
+   "kind": "github_app",
+   "name": "dependabot-merge-bot",
+   "system": "github",
+   "owner": "omar.haddad@careloop.test",
+   "created": "2026-04-12",
+   "last_used": "2026-10-29",
+   "scopes": [
+    "contents:write",
+    "pull_requests:write",
+    "administration:write"
+   ]
+  },
+  {
+   "id": "nhi-006",
+   "kind": "oauth_grant",
+   "name": "scheduling-vendor-sync",
+   "system": "google_workspace",
+   "owner": "sofia.reyes@careloop.test",
+   "created": "2026-08-15",
+   "last_used": "2026-10-27",
+   "scopes": [
+    "https://www.googleapis.com/auth/calendar.readonly"
+   ]
+  },
+  {
+   "id": "nhi-007",
+   "kind": "oauth_grant",
+   "name": "ai-notetaker",
+   "system": "google_workspace",
+   "owner": "former.employee@careloop.test",
+   "created": "2026-08-30",
+   "last_used": "2026-10-24",
+   "scopes": [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/gmail.readonly"
+   ]
+  },
+  {
+   "id": "nhi-008",
+   "kind": "api_token",
+   "name": "okta-sync-token",
+   "system": "okta",
+   "owner": "priya.nair@careloop.test",
+   "created": "2025-05-07",
+   "last_used": "2026-10-29",
+   "scopes": [
+    "okta.users.read",
+    "okta.groups.manage"
+   ]
+  },
+  {
+   "id": "nhi-009",
+   "kind": "iam_user_key",
+   "name": "svc-analytics-export",
+   "system": "aws",
+   "owner": null,
+   "created": "2026-02-11",
+   "last_used": "2026-07-26",
+   "policy": {
+    "Statement": [
+     {
+      "Effect": "Allow",
+      "Action": [
+       "s3:GetObject"
+      ],
+      "Resource": "*"
+     }
+    ]
+   }
+  },
+  {
+   "id": "nhi-010",
+   "kind": "service_account",
+   "name": "jira-automation",
+   "system": "atlassian",
+   "owner": "marcus.webb@careloop.test",
+   "created": "2026-06-01",
+   "last_used": "2026-10-22",
+   "scopes": [
+    "read:jira-work",
+    "write:jira-work"
+   ]
+  },
+  {
+   "id": "nhi-011",
+   "kind": "api_token",
+   "name": "vendor-llm-gateway-key",
+   "system": "vendor",
+   "owner": "sofia.reyes@careloop.test",
+   "created": "2026-09-19",
+   "last_used": "2026-10-29",
+   "scopes": [
+    "inference",
+    "files:read",
+    "files:write"
+   ]
+  }
+ ]
+}
