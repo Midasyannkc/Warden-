@@ -64,3 +64,32 @@ def test_debug_endpoint_does_not_exist_and_leaks_nothing():
     c = client()
     r = c.get("/debug")
     assert r.status_code == 404 and b"PATH" not in r.data and b"careloop-signing-key" not in r.data
+
+
+def test_import_accepts_plain_yaml():
+    c = client()
+    r = c.post("/import", data="name: Ada\ncity: Dallas\n", headers=as_member(c))
+    assert r.status_code == 200 and r.get_json()["imported"] == {"name": "Ada", "city": "Dallas"}
+
+
+def test_import_refuses_yaml_that_constructs_python_objects():
+    c = client()
+    r = c.post("/import", data="!!python/object/apply:builtins.len [[1, 2, 3]]", headers=as_member(c))
+    assert r.status_code == 400, "a payload that calls a Python function must not be evaluated"
+
+
+def test_vendor_call_verifies_tls_and_has_a_timeout(monkeypatch):
+    seen = {}
+
+    class R:
+        status_code = 202
+
+    def fake_post(url, **kw):
+        seen.update(kw)
+        return R()
+
+    monkeypatch.setattr("target.app.main.requests.post", fake_post)
+    c = client()
+    r = c.post("/notify", json={"msg": "hi"}, headers=as_member(c))
+    assert r.status_code == 200
+    assert seen.get("verify", True) is True and seen.get("timeout")
