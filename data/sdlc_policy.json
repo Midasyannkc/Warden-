@@ -1,0 +1,13 @@
+{
+  "_note": "Policy for the agentic SDLC gate. Synthetic.",
+  "ai_author_patterns": ["[bot]", "copilot", "devin", "claude", "codex", "cursor-agent"],
+  "ai_trailers": ["Co-Authored-By", "Generated-by", "Claude-Session", "AI-Assisted"],
+  "ai_trailer_values": ["claude", "copilot", "gpt", "gemini", "devin", "cursor"],
+  "required_checks": ["sast", "secrets", "iac"],
+  "phases": {
+    "design": ["threat_model_linked_if_sensitive"],
+    "build": ["tests_pass"],
+    "review": ["independent_human_approval", "codeowner_approval_if_sensitive"],
+    "release": ["signed_attestation", "no_critical_findings"]
+  }
+}

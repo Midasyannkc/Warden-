@@ -1,0 +1,9 @@
+# Sensitive paths need review from the security owner, not just any approver.
+/warden/sdlc/            @careloop/security
+/warden/agents/          @careloop/security
+/target/infra/           @careloop/security @careloop/platform
+/target/app/auth*        @careloop/security
+/target/app/config.py    @careloop/security
+/.github/                @careloop/security
+/data/sdlc_policy.json   @careloop/security
+*                        @careloop/engineering
