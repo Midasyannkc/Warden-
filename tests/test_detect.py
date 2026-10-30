@@ -59,3 +59,16 @@ def test_admin_policy_only_for_administrator_access():
 
 def test_every_rule_names_a_technique():
     assert all(r.meta["technique"].startswith("T1") for r in D.RULES)
+
+
+def test_bulk_read_alert_lists_every_object_read():
+    a = BY["bulk-phi-bucket-read"][0]
+    assert len(a.events) == 60, "the scope of a PHI read decides breach notification, so the alert cannot undercount it"
+
+
+def test_denied_burst_lists_every_denied_call():
+    assert len(BY["access-denied-burst"][0].events) == 14
+
+
+def test_all_planted_events_are_detected():
+    assert D.score(EV, ALERTS)["recall"] == 1.0
