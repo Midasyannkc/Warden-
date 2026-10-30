@@ -25,6 +25,12 @@ class Call:
     origin: str = "user"   # "user" or "document": where the planning text came from
 
 
+def is_internal(address: str, domains: tuple) -> bool:
+    """True only when the part after the last @ is exactly an internal domain or a subdomain of one."""
+    host = address.rpartition("@")[2].lower()
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
 SUMMARIZER = Grant("support-summarizer", {"member:read:self", "email:send:internal"}, ("careloop.test",), ())
 
 
@@ -49,12 +55,12 @@ def authorize(call: Call, grant: Grant, session_member: int, *, layers=("authz",
         else:
             return False, f"unknown tool {t}"
     if "egress" in layers:
-        if t == "send_email" and not any(a.get("to", "").endswith(d) for d in grant.email_domains):
+        if t == "send_email" and not is_internal(a.get("to", ""), grant.email_domains):
             return False, "recipient outside the internal domain"
         if t == "http_post" and urlparse(a.get("url", "")).hostname not in grant.egress_hosts:
             return False, "host not on the egress allowlist"
     if "dlp" in layers and t in {"send_email", "http_post"}:
-        external = t == "http_post" or not any(a.get("to", "").endswith(d) for d in grant.email_domains)
+        external = t == "http_post" or not is_internal(a.get("to", ""), grant.email_domains)
         hits = dlp.scan(str(a.get("body", "")))
         if hits and external:
             return False, "PHI in outbound content: " + ",".join(hits)
