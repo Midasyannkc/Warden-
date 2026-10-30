@@ -30,3 +30,10 @@ def test_recurring_findings_become_guardrails():
     hist = [[mk("sql-injection"), mk("x")], [mk("sql-injection")], [mk("sql-injection"), mk("y")]]
     fb = manage.feedback(hist)
     assert fb[0]["category"] == "sql-injection" and fb[0]["scans"] == 3 and "parameterized" in fb[0]["guardrail"]
+
+
+def test_same_secret_from_two_tools_is_one_finding(scan_findings):
+    fs = [f for f in scan_findings if f.category == "hardcoded-secret"]
+    merged = manage.dedupe(fs)
+    keys = {(f.file, f.line) for f in fs}
+    assert len(merged) == len(keys)
