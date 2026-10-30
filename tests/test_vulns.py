@@ -37,3 +37,22 @@ def test_same_secret_from_two_tools_is_one_finding(scan_findings):
     merged = manage.dedupe(fs)
     keys = {(f.file, f.line) for f in fs}
     assert len(merged) == len(keys)
+
+
+def test_recurring_order_is_deterministic_for_ties():
+    """Set iteration order changes with PYTHONHASHSEED, so check several seeds in fresh processes."""
+    import os
+    import subprocess
+    import sys
+    code = (
+        "from warden.model import Finding\n"
+        "from warden.vulns import manage\n"
+        "mk = lambda c: Finding('t', c, 'high', c, 'f', category=c, resource=c)\n"
+        "hist = [[mk('b-class'), mk('a-class'), mk('c-class')]] * 3\n"
+        "print([c for c, _ in manage.recurring(hist)])\n"
+    )
+    outs = set()
+    for seed in range(1, 8):
+        p = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={**os.environ, "PYTHONHASHSEED": str(seed)})
+        outs.add(p.stdout.strip())
+    assert outs == {"['a-class', 'b-class', 'c-class']"}
