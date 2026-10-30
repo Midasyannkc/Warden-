@@ -178,7 +178,7 @@ resource "aws_db_instance" "members" {
   instance_class                      = "db.t3.medium"
   allocated_storage                   = 50
   username                            = "careloop"
-  manage_master_user_password         = true
+  manage_master_user_password         = true # pragma: allowlist secret (boolean flag, no credential)
   publicly_accessible                 = false
   storage_encrypted                   = true
   kms_key_id                          = aws_kms_key.phi.arn
