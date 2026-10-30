@@ -1,6 +1,5 @@
 import hashlib
 import json
-import os
 import time
 import hmac
 import base64
@@ -82,8 +81,11 @@ def make_app():
 
     @app.get("/admin/export")
     def export():
-        if not current():
+        user = current()
+        if not user:
             return jsonify(error="auth required"), 401
+        if user["role"] != "admin":
+            return forbidden()
         return jsonify(members=[dict(r) for r in con.execute("select id, email, name, dob, role from members")])
 
     @app.post("/import")
@@ -92,10 +94,6 @@ def make_app():
             return jsonify(error="auth required"), 401
         data = yaml.load(request.get_data(), Loader=yaml.Loader)
         return jsonify(imported=data)
-
-    @app.get("/debug")
-    def debug():
-        return jsonify(env=dict(os.environ), secret=config.JWT_SECRET)
 
     @app.post("/notify")
     def notify():
