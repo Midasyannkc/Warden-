@@ -10,7 +10,7 @@ This project was built in one session with Claude as the coding assistant and Ch
 ## What was checked, and how
 
 - **Real tools, real output.** Bandit, Semgrep, Checkov and detect-secrets were run on the code and their JSON parsed. The counts in the README come from `python -m warden`, not from memory.
-- **Every incident has a failing test first.** Each reproduce commit was run and seen to fail for the stated reason before the fix was written. INC-1, INC-7, INC-15, INC-16 and INC-17 came from running real scanner output; INC-15 and INC-17 were found while building the baseline scan and were not planned.
+- **Every incident has a failing test first.** Each reproduce commit was run and seen to fail for the stated reason before the fix was written. INC-1, INC-7, INC-15, INC-16 and INC-17 came from running real scanner output; INC-15 and INC-17 were found while building the baseline scan, and INC-18 and INC-19 by diffing a fresh clone's report against the committed one; none were planned.
 - **Exploit tests for the app.** Each seeded vulnerability has a test that attacks the running Flask app through its test client (another member's id, an injection string, a YAML tag that calls a function, a shifted clock for token expiry).
 - **Tests written wrongly at first.** The first conflict test for the clawback did not conflict (git merged the edits cleanly), so it was rewritten to change the same line before it could count as a reproduction. The first scan test asserted seeded flaws on the live tree and went red after remediation; it now scans the baseline commit.
 - **Labelled data.** The CloudTrail events carry a hidden `_label` used only for scoring, written before the detection rules.

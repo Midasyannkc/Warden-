@@ -21,6 +21,8 @@ Every incident has two commits. The first adds a test that fails for the right r
 | INC-15 | The secret scanner silently found nothing outside a git work tree | baseline scan from a scratch checkout | `91c2251` | `645e0e6` |
 | INC-16 | Secret scanner flagged a Terraform boolean as a credential | remediated-tree scan | `825ca37` | `6151e9c` |
 | INC-17 | The custom Semgrep rule for BOLA never matched anything | coverage test over the vulnerable baseline | `41cc5cf` | `41d1b1a` |
+| INC-18 | Report ordering changed between runs | clean clone verification | `3fbebe7` | `f3ac3fe` |
+| INC-19 | The committed report was different on every run | clean clone verification, diffing two runs | `0e3807f` | `04c9b09` |
 
 ### INC-1: One hardcoded secret reported by two scanners counted twice
 
@@ -123,3 +125,15 @@ Reproduce `825ca37`, fix `6151e9c`. Found by: remediated-tree scan.
 The first version of the rule used a route-string wildcard that Semgrep does not support in a decorator, so it silently matched nothing and no tool reported the worst flaw in the app. The rule now matches the route with a metavariable regex and a not-pattern for the ownership check, a second rule covers admin routes with no role check, and a test asserts that exactly the two vulnerable routes and the one admin route are caught on the baseline and nothing is caught on the fixed tree. The baseline is now scanned with the current rules, because scanning it with its own old rules would hide exactly this kind of fix.
 
 Reproduce `41cc5cf`, fix `41d1b1a`. Found by: coverage test over the vulnerable baseline.
+
+### INC-18: Report ordering changed between runs
+
+The recurring-issue list was built from sets and a Counter, so categories with the same count came out in an order that depended on the hash seed, and a fresh clone produced a different report from the committed one. Ties are now ordered by count and then name, and a test runs several hash seeds in separate processes.
+
+Reproduce `3fbebe7`, fix `f3ac3fe`. Found by: clean clone verification.
+
+### INC-19: The committed report was different on every run
+
+Fresh clones regenerated out/report.json with different random IAM key ids from moto, scratch-repo commit hashes that depend on the clock, and a set-ordered dictionary. Evidence that changes on every run cannot be diffed or reviewed, so volatile values are masked with fixed markers, ordering is sorted, and a test builds the report under two hash seeds in separate processes and requires identical output.
+
+Reproduce `0e3807f`, fix `04c9b09`. Found by: clean clone verification, diffing two runs.

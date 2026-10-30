@@ -51,11 +51,11 @@ Design notes are in [docs/architecture.md](docs/architecture.md).
 
 ## Incidents
 
-Seventeen defects were found and fixed. Each has a commit that adds a failing test (run and seen to fail for the right reason) followed by a separate fix commit. Details are in [docs/incidents.md](docs/incidents.md).
+Nineteen defects were found and fixed. Each has a commit that adds a failing test (run and seen to fail for the right reason) followed by a separate fix commit. Details are in [docs/incidents.md](docs/incidents.md).
 
 Two kinds are mixed on purpose and the log says which is which. INC-8 to INC-14 are the vulnerabilities seeded in the target app and Terraform, found by exploit tests and by the real scanners. The rest are defects in Warden itself, found by tests, the labelled data, or by running the real tools: a custom Semgrep rule that silently matched nothing, a secret scanner that prints nothing outside a git tree, and a CODEOWNERS file whose last line disabled every rule above it.
 
-This is a construction method, not a record of accidental bugs: the first draft of each module used the simple assumption most implementations start with (a string suffix for a domain, a window that stops at its threshold, a regex for the dashed SSN), and the incidents record what tests, labelled data and the real tools did to those assumptions. INC-15 and INC-17 were not planned; they surfaced when the real tools were run from a scratch checkout and against the baseline.
+This is a construction method, not a record of accidental bugs: the first draft of each module used the simple assumption most implementations start with (a string suffix for a domain, a window that stops at its threshold, a regex for the dashed SSN), and the incidents record what tests, labelled data and the real tools did to those assumptions. INC-15, INC-17, INC-18 and INC-19 were not planned; they surfaced when the real tools were run from a scratch checkout and against the baseline, and when a fresh clone produced a different report.
 
 <!-- incidents:start -->
 | # | Incident | Found by | Reproduce | Fix |
@@ -77,13 +77,15 @@ This is a construction method, not a record of accidental bugs: the first draft 
 | INC-15 | The secret scanner silently found nothing outside a git work tree | baseline scan from a scratch checkout | `91c2251` | `645e0e6` |
 | INC-16 | Secret scanner flagged a Terraform boolean as a credential | remediated-tree scan | `825ca37` | `6151e9c` |
 | INC-17 | The custom Semgrep rule for BOLA never matched anything | coverage test over the vulnerable baseline | `41cc5cf` | `41d1b1a` |
+| INC-18 | Report ordering changed between runs | clean clone verification | `3fbebe7` | `f3ac3fe` |
+| INC-19 | The committed report was different on every run | clean clone verification, diffing two runs | `0e3807f` | `04c9b09` |
 <!-- incidents:end -->
 
 ## Run it
 
 ```
 pip install -r requirements.txt --break-system-packages
-python3 -m pytest -q        # 105 tests, about 7 seconds once scanner output is cached
+python3 -m pytest -q        # 107 tests, about 10 seconds once scanner output is cached
 python3 -m warden           # runs every module and writes out/report.json and docs/REPORT.md
 make rescan                 # force the real scanners to run again (about 100 seconds per tree)
 ```

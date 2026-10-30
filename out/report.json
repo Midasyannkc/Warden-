@@ -246,14 +246,14 @@
     "action": "disable",
     "user": "svc-analytics-export",
     "deactivated": [
-     "AKIARZPUZDIKEQWHCMBQ"
+     "<access-key-id>"
     ]
    },
    {
     "action": "disable",
     "user": "svc-legacy-etl",
     "deactivated": [
-     "AKIARZPUZDIKJJRFFOYT"
+     "<access-key-id>"
     ]
    }
   ],
@@ -366,14 +366,14 @@
      "step": "revoke-agent",
      "user": "ai-agent",
      "deactivated": [
-      "AKIARZPUZDIKANKYQPSD"
+      "<access-key-id>"
      ]
     },
     {
      "step": "revert",
      "branch": "clawback/drill",
      "reverted": [
-      "2f57833d907dc18ca9703667caa93fd775a9f4c5"
+      "<commit>"
      ],
      "conflicts": []
     },
@@ -382,9 +382,9 @@
      "action": "rotate",
      "user": "svc-db",
      "deleted": [
-      "AKIARZPUZDIKJ4N2BX7R"
+      "<access-key-id>"
      ],
-     "created": "AKIARZPUZDIKL2M3J4VF"
+     "created": "<access-key-id>"
     },
     {
      "step": "verify",

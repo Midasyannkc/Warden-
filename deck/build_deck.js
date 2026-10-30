@@ -138,12 +138,12 @@ s.addNotes("The KEV file is the real CISA catalog, version 2026.10.29. Component
 
 // 8. Incidents
 s = pres.addSlide({ masterName: "CONTENT" });
-s.addText("Seventeen defects, each reproduced then fixed", { placeholder: "title" });
+s.addText("Nineteen defects, each reproduced then fixed", { placeholder: "title" });
 const groups = [
   ["Seeded in the target (7)", "BOLA on member records\nSQL injection in search\nOpen export route and debug endpoint\nUnsafe YAML, TLS verification off\nSecrets in source, MD5 passwords\nTokens that never expire\nExposed Terraform"],
   ["Found in the tooling (4)", "Secret counted twice by two tools\nCustom Semgrep rule matched nothing\nSecret scanner silent outside git\nFalse positive on a Terraform boolean"],
   ["Found in the controls (4)", "CODEOWNERS catch-all listed last\nLookalike email domain passed\nDLP missed labeled SSN and MRN\nBurst alert undercounted PHI reads"],
-  ["Found in the procedures (2)", "Clawback crashed on a revert conflict\nControl map left 20 checks unmapped"],
+  ["Found in the procedures (4)", "Clawback crashed on a revert conflict\nControl map left 20 checks unmapped\nRecurring list order varied by hash seed\nReport differed on every run"],
 ];
 groups.forEach(([t, body], i) => {
   const x = 0.6 + (i % 2) * 4.5, y = 1.3 + Math.floor(i / 2) * 1.95;
@@ -184,7 +184,7 @@ s.addText([
   { text: "A language model: the agent is a simulation", options: { bullet: true, breakLine: true } },
   { text: "Years of on-call and incident experience", options: { bullet: true } },
 ], { x: 5.2, y: 1.5, w: 4.2, h: 2.7, fontSize: 15, color: C.background1, paraSpaceAfter: 8, valign: "top", margin: 0, isTextBox: true, objectName: "NotShownText" });
-txt(s, "105 tests  |  17 incidents  |  sole-author git history  |  nothing pushed", { x: 0.7, y: 4.55, w: 8.6, h: 0.4, fontSize: 14, color: C.accent3, objectName: "Footer" });
+txt(s, "107 tests  |  19 incidents  |  sole-author git history  |  nothing pushed", { x: 0.7, y: 4.55, w: 8.6, h: 0.4, fontSize: 14, color: C.accent3, objectName: "Footer" });
 
 (async () => {
   const out = path.join(__dirname, "..", "Warden_Executive_Summary.pptx");
