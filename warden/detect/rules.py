@@ -117,12 +117,16 @@ def window(events, pick, minutes, count):
     for user, es in by.items():
         es.sort(key=t)
         i = 0
+        members: dict[str, dict] = {}
         for j, e in enumerate(es):
             while t(e) - t(es[i]) > dt.timedelta(minutes=minutes):
                 i += 1
             if j - i + 1 >= count:
-                hits.append((user, es[i:j + 1]))
-                break
+                # keep every event inside any qualifying window so the alert shows the full scope
+                for x in es[i:j + 1]:
+                    members[x["eventID"]] = x
+        if members:
+            hits.append((user, sorted(members.values(), key=t)))
     return hits
 
 
