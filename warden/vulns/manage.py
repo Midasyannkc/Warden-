@@ -86,7 +86,7 @@ def recurring(history: list[list[Finding]], threshold: int = 2) -> list[tuple[st
     for scan in history:
         for cat in {f.category for f in scan}:
             seen[cat] += 1
-    return [(c, n) for c, n in seen.most_common() if n >= threshold]
+    return sorted(((c, n) for c, n in seen.items() if n >= threshold), key=lambda cn: (-cn[1], cn[0]))
 
 
 GUARDRAILS = {
