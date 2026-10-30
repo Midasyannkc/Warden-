@@ -37,6 +37,9 @@ def make_app():
         h = request.headers.get("Authorization", "")
         return verify(h[7:]) if h.startswith("Bearer ") else None
 
+    def forbidden():
+        return jsonify(error="forbidden"), 403
+
     @app.post("/login")
     def login():
         data = request.get_json(force=True)
@@ -51,6 +54,8 @@ def make_app():
         user = current()
         if not user:
             return jsonify(error="auth required"), 401
+        if user["sub"] != member_id:
+            return forbidden()
         row = con.execute("select id, email, name, dob from members where id=?", (member_id,)).fetchone()
         recs = [dict(r) for r in con.execute("select kind, note from records where member_id=?", (member_id,))]
         return jsonify(member=dict(row) if row else None, records=recs)
@@ -60,6 +65,8 @@ def make_app():
         user = current()
         if not user:
             return jsonify(error="auth required"), 401
+        if user["sub"] != member_id:
+            return forbidden()
         return jsonify(messages=[dict(r) for r in con.execute("select body from messages where member_id=?", (member_id,))])
 
     @app.get("/search")
