@@ -1,0 +1,201 @@
+{
+ "_note": "Synthetic vendor dossiers. Vendors are fictional; claims and evidence are invented to exercise the reviewer.",
+ "review_date": "2026-10-29",
+ "vendors": [
+  {
+   "name": "ScribeNote",
+   "category": "ambient AI scribe",
+   "claims": [
+    "SOC2 Type II certified",
+    "HIPAA compliant",
+    "Zero data retention",
+    "We never train on customer data",
+    "AES-256 encryption at rest"
+   ],
+   "evidence": {
+    "soc2": {
+     "type": "I",
+     "period_end": "2026-03-31",
+     "covers_product": true,
+     "exceptions": 0
+    },
+    "baa_signed": true,
+    "retention_days": 30,
+    "training_opt_out_in_contract": false,
+    "subprocessors": [
+     {
+      "name": "LLM host",
+      "country": "US"
+     },
+     {
+      "name": "transcription",
+      "country": "IN"
+     }
+    ],
+    "encryption_at_rest": "AES-256",
+    "pen_test_date": "2026-01-10"
+   },
+   "data_flows": [
+    {
+     "data": [
+      "audio",
+      "transcript",
+      "diagnosis",
+      "name"
+     ],
+     "destination": "ScribeNote cloud",
+     "purpose": "visit transcription"
+    }
+   ]
+  },
+  {
+   "name": "SlotPilot",
+   "category": "appointment scheduling",
+   "claims": [
+    "SOC 2 Type 2 report available",
+    "BAA available on request"
+   ],
+   "evidence": {
+    "soc2": {
+     "type": "II",
+     "period_end": "2026-06-30",
+     "covers_product": true,
+     "exceptions": 1
+    },
+    "baa_signed": true,
+    "retention_days": 365,
+    "training_opt_out_in_contract": true,
+    "subprocessors": [
+     {
+      "name": "email relay",
+      "country": "US"
+     }
+    ],
+    "encryption_at_rest": "AES-256",
+    "pen_test_date": "2026-04-02"
+   },
+   "data_flows": [
+    {
+     "data": [
+      "name",
+      "phone",
+      "appointment time",
+      "diagnosis"
+     ],
+     "destination": "SlotPilot cloud",
+     "purpose": "book appointments"
+    }
+   ]
+  },
+  {
+   "name": "InsightGateway",
+   "category": "LLM analytics gateway",
+   "claims": [
+    "No training on customer data",
+    "Zero-retention mode",
+    "SOC2 Type II"
+   ],
+   "evidence": {
+    "soc2": {
+     "type": "II",
+     "period_end": "2025-08-31",
+     "covers_product": false,
+     "exceptions": 2
+    },
+    "baa_signed": true,
+    "retention_days": 0,
+    "training_opt_out_in_contract": true,
+    "subprocessors": [
+     {
+      "name": "model provider",
+      "country": "US"
+     },
+     {
+      "name": "logging",
+      "country": "IE"
+     }
+    ],
+    "encryption_at_rest": "AES-256",
+    "pen_test_date": "2025-09-15"
+   },
+   "data_flows": [
+    {
+     "data": [
+      "de-identified claims"
+     ],
+     "destination": "InsightGateway",
+     "purpose": "cohort analytics"
+    }
+   ]
+  },
+  {
+   "name": "LabBridge",
+   "category": "lab results interface",
+   "claims": [
+    "SOC 2 Type II",
+    "HITRUST certified"
+   ],
+   "evidence": {
+    "soc2": {
+     "type": "II",
+     "period_end": "2026-08-31",
+     "covers_product": true,
+     "exceptions": 0
+    },
+    "baa_signed": true,
+    "retention_days": 90,
+    "training_opt_out_in_contract": true,
+    "subprocessors": [
+     {
+      "name": "cloud host",
+      "country": "US"
+     }
+    ],
+    "encryption_at_rest": "AES-256",
+    "pen_test_date": "2026-07-20",
+    "hitrust": {
+     "valid_until": "2027-05-01"
+    }
+   },
+   "data_flows": [
+    {
+     "data": [
+      "lab results",
+      "member id"
+     ],
+     "destination": "LabBridge",
+     "purpose": "deliver lab results to chart"
+    }
+   ]
+  },
+  {
+   "name": "ChatBubble",
+   "category": "website chat widget",
+   "claims": [
+    "Enterprise-grade security",
+    "HIPAA compliant"
+   ],
+   "evidence": {
+    "soc2": null,
+    "baa_signed": false,
+    "retention_days": 730,
+    "training_opt_out_in_contract": false,
+    "subprocessors": [],
+    "encryption_at_rest": "unknown",
+    "pen_test_date": null
+   },
+   "data_flows": [
+    {
+     "data": [
+      "name",
+      "email",
+      "symptoms",
+      "diagnosis"
+     ],
+     "destination": "ChatBubble cloud",
+     "purpose": "answer member questions"
+    }
+   ]
+  }
+ ]
+}
