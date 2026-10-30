@@ -71,3 +71,14 @@ def test_main_branch_is_untouched(repo):
     before = clawback.git(repo, "rev-parse", "main")
     clawback.run(repo, "base", make_iam(), "ai-agent", [], "true")
     assert clawback.git(repo, "rev-parse", "main") == before
+
+
+@mock_aws
+def test_clawback_survives_a_later_human_edit_to_the_same_file(repo):
+    commit(repo, "app.py", "KEY='AKIAEXAMPLE'\ndef f():\n    return 1\n", "agent: add client\n\nCo-Authored-By: Claude <n@x.test>")
+    commit(repo, "app.py", "KEY='AKIAHUMAN'\ndef f():\n    return 1\n", "human tweak")
+    res = clawback.run(repo, "base", make_iam(), "ai-agent", [], "sh check.sh")
+    assert res["ok"] is False
+    step = [e for e in res["evidence"] if e["step"] == "revert"][0]
+    assert step["conflicts"], "a conflicted revert must be reported, not crash the procedure"
+    assert clawback.git(repo, "status", "--porcelain") == ""
