@@ -1,4 +1,5 @@
-def test_real_scanners_find_seeded_flaws(scan_findings):
+def test_real_scanners_find_seeded_flaws(baseline_findings):
+    scan_findings = baseline_findings
     cats = {f.category for f in scan_findings}
     for expected in ["sql-injection", "unsafe-deserialization", "hardcoded-secret", "public-s3", "open-ssh", "iam-wildcard", "rds-public"]:
         assert expected in cats, expected

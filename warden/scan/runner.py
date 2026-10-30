@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import subprocess
+import tempfile
 
 from . import normalize
 
@@ -47,21 +48,35 @@ def raw_scan(root: str, target: str) -> dict:
     return {"bandit": bandit, "semgrep": semgrep, "checkov": checkov, "detect-secrets": secrets}
 
 
-def run_all(root: str = ROOT, target: str = "target", use_cache: bool = True) -> list:
+def _raw_cached(root: str, target: str, use_cache: bool) -> dict:
     key = tree_hash(root, target)
-    raw = None
-    cache = os.path.join(root, "out", "raw_scan_cache.json")
-    if use_cache and os.path.exists(cache):
-        c = json.load(open(cache))
-        if c.get("key") == key:
-            raw = c["raw"]
-    if raw is None:
-        raw = raw_scan(root, target)
-        os.makedirs(os.path.dirname(cache), exist_ok=True)
-        json.dump({"key": key, "raw": raw}, open(cache, "w"))
+    cache = os.path.join(ROOT, "out", "raw_scan_cache.json")
+    store = json.load(open(cache)) if os.path.exists(cache) else {}
+    if use_cache and key in store:
+        return store[key]
+    raw = raw_scan(root, target)
+    store[key] = raw
+    os.makedirs(os.path.dirname(cache), exist_ok=True)
+    json.dump(store, open(cache, "w"))
+    return raw
+
+
+def _normalize(raw: dict) -> list:
     findings = []
     findings += normalize.bandit(raw["bandit"])
     findings += normalize.semgrep(raw["semgrep"])
     findings += normalize.checkov(raw["checkov"])
     findings += normalize.detect_secrets(raw["detect-secrets"])
     return findings
+
+
+def run_all(root: str = ROOT, target: str = "target", use_cache: bool = True) -> list:
+    return _normalize(_raw_cached(root, target, use_cache))
+
+
+def run_commit(sha: str, use_cache: bool = True) -> list:
+    """Scan the target exactly as it was at a past commit, in a scratch directory."""
+    with tempfile.TemporaryDirectory() as td:
+        arc = subprocess.run(["git", "archive", sha, "target", "semgrep_rules"], cwd=ROOT, capture_output=True, check=True)
+        subprocess.run(["tar", "-x", "-C", td], input=arc.stdout, check=True)
+        return _normalize(_raw_cached(td, "target", use_cache))
