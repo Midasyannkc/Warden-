@@ -16,3 +16,9 @@ def test_status_is_gap_when_findings_exist_and_never_claims_met():
 def test_category_maps_to_control():
     assert C.control_for("public-s3") == ["164.312(e)(1)"]
     assert C.control_for("nothing") == []
+
+
+def test_every_scanner_category_in_the_target_maps_to_a_control(scan_findings):
+    from warden.vulns import manage
+    cats = [f.category for f in manage.dedupe(scan_findings)]
+    assert C.unmapped(cats) == []
