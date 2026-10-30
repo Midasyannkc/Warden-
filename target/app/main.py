@@ -92,14 +92,17 @@ def make_app():
     def import_profile():
         if not current():
             return jsonify(error="auth required"), 401
-        data = yaml.load(request.get_data(), Loader=yaml.Loader)
+        try:
+            data = yaml.safe_load(request.get_data())
+        except yaml.YAMLError:
+            return jsonify(error="invalid yaml"), 400
         return jsonify(imported=data)
 
     @app.post("/notify")
     def notify():
         if not current():
             return jsonify(error="auth required"), 401
-        r = requests.post(config.VENDOR_WEBHOOK, json=request.get_json(force=True), verify=False, timeout=5)
+        r = requests.post(config.VENDOR_WEBHOOK, json=request.get_json(force=True), timeout=5)
         return jsonify(status=r.status_code)
 
     return app
