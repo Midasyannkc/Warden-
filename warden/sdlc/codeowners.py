@@ -39,3 +39,17 @@ def is_sensitive(rules, path: str) -> bool:
     """A path is sensitive when something more specific than the catch-all claims it."""
     catch_all = next((o for p, o in rules if p == "*"), [])
     return owners_for(rules, path) != catch_all
+
+
+def lint(rules) -> list[str]:
+    """Report patterns that can never take effect because a later, broader pattern
+    matches the same paths and wins. GitHub applies the last match."""
+    problems = []
+    for i, (pat, _) in enumerate(rules):
+        if pat == "*":
+            continue
+        for later_pat, _ in rules[i + 1:]:
+            if later_pat == "*":
+                problems.append(f"{pat} is shadowed by the later catch-all *")
+                break
+    return problems

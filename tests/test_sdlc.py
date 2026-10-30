@@ -111,3 +111,12 @@ def test_codeowners_last_match_wins():
     assert codeowners.owners_for(RULES, "target/app/config.py") == ["@careloop/security"]
     assert codeowners.owners_for(RULES, "target/app/auth_service.py") == ["@careloop/security"]
     assert codeowners.owners_for(RULES, ".github/workflows/ci.yml") == ["@careloop/security"]
+
+
+def test_repo_codeowners_has_no_shadowed_rules():
+    assert codeowners.lint(RULES) == []
+
+
+def test_lint_catches_catch_all_listed_last():
+    bad = codeowners.parse("/warden/sdlc/ @sec\n* @eng\n")
+    assert codeowners.lint(bad) == ["/warden/sdlc/ is shadowed by the later catch-all *"]
