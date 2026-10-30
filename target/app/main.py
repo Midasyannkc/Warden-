@@ -74,8 +74,10 @@ def make_app():
         user = current()
         if not user:
             return jsonify(error="auth required"), 401
+        if user["role"] != "admin":
+            return forbidden()
         q = request.args.get("q", "")
-        rows = con.execute(f"select id, name from members where name like '%{q}%'").fetchall()
+        rows = con.execute("select id, name from members where name like ?", (f"%{q}%",)).fetchall()
         return jsonify(results=[dict(r) for r in rows])
 
     @app.get("/admin/export")
