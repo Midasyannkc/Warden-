@@ -11,3 +11,12 @@ def test_fingerprint_ignores_line_numbers():
     a = Finding("semgrep", "r", "high", "t", "a.py", 10, category="sql-injection", resource="sql-injection")
     b = Finding("semgrep", "r", "high", "t", "a.py", 99, category="sql-injection", resource="sql-injection")
     assert a.fingerprint == b.fingerprint
+
+
+def test_secret_scanner_works_outside_a_git_tree(tmp_path):
+    from warden.scan import runner
+    d = tmp_path / "target" / "app"
+    d.mkdir(parents=True)
+    (d / "leak.py").write_text('aws_secret_access_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"\n')
+    raw = runner.secrets_scan(str(tmp_path), "target")
+    assert raw["results"], "a planted credential must be found even when the directory is not a repository"
