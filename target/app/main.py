@@ -29,9 +29,12 @@ def make_app():
         except ValueError:
             return None
         good = hmac.new(config.JWT_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
-        if mac != good:
+        if not hmac.compare_digest(mac, good):
             return None
-        return json.loads(base64.urlsafe_b64decode(body.encode()))
+        claims = json.loads(base64.urlsafe_b64decode(body.encode()))
+        if claims.get("exp", 0) < time.time():
+            return None
+        return claims
 
     def current():
         h = request.headers.get("Authorization", "")
