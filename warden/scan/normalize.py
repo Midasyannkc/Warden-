@@ -33,7 +33,12 @@ CHECKOV_CATEGORY = {
     "CKV_AWS_289": "iam-privilege-escalation", "CKV_AWS_286": "iam-privilege-escalation",
     "CKV_AWS_287": "iam-credentials-exposure", "CKV_AWS_288": "iam-data-exfiltration",
     "CKV_AWS_290": "iam-write-without-constraint", "CKV_AWS_60": "iam-wildcard-assume",
+    "CKV2_AWS_30": "rds-logging", "CKV_AWS_129": "rds-logging", "CKV_AWS_118": "rds-monitoring", "CKV_AWS_353": "rds-monitoring",
+    "CKV_AWS_161": "rds-iam-auth", "CKV2_AWS_40": "iam-privilege-escalation", "CKV_AWS_226": "rds-resilience",
+    "CKV_AWS_293": "rds-resilience", "CKV2_AWS_60": "rds-resilience", "CKV2_AWS_61": "s3-versioning", "CKV2_AWS_62": "s3-logging",
+    "CKV_AWS_144": "s3-versioning", "CKV2_AWS_5": "sg-hygiene", "CKV_AWS_23": "sg-hygiene", "CKV_AWS_382": "open-egress",
 }
+LOW = {"sg-hygiene", "rds-monitoring", "rds-resilience", "rds-multiaz", "s3-versioning"}
 
 
 def secret_key(line: int) -> str:
@@ -68,7 +73,7 @@ def checkov(raw: dict) -> list[Finding]:
     out = []
     for r in raw.get("results", {}).get("failed_checks", []):
         cat = CHECKOV_CATEGORY.get(r["check_id"], r["check_id"].lower())
-        sev = "high" if cat in {"public-s3", "open-ssh", "rds-public", "iam-wildcard", "eks-public-endpoint",
+        sev = "low" if cat in LOW else "high" if cat in {"public-s3", "open-ssh", "rds-public", "iam-wildcard", "eks-public-endpoint",
                                 "rds-encryption", "iam-privilege-escalation", "iam-credentials-exposure"} else "medium"
         out.append(Finding("checkov", r["check_id"], sev, r["check_name"], r["file_path"].lstrip("/"),
                            (r.get("file_line_range") or [0])[0], "", cat, resource=r["resource"]))
