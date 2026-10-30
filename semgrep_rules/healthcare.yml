@@ -1,0 +1,30 @@
+rules:
+  - id: careloop-missing-ownership-check
+    languages: [python]
+    severity: ERROR
+    message: Route takes a member id from the URL and queries by it without comparing it to the authenticated user. Broken object level authorization.
+    patterns:
+      - pattern: |
+          @app.get("/members/<int:member_id>$...")
+          def $F(member_id):
+              ...
+      - pattern-not: |
+          @app.get("/members/<int:member_id>$...")
+          def $F(member_id):
+              ...
+              if ... != member_id:
+                  ...
+              ...
+    metadata: { cwe: CWE-639, owasp: A01 }
+  - id: careloop-sql-fstring
+    languages: [python]
+    severity: ERROR
+    message: SQL built with an f-string from request data.
+    pattern: $CON.execute(f"...")
+    metadata: { cwe: CWE-89 }
+  - id: careloop-yaml-unsafe-load
+    languages: [python]
+    severity: ERROR
+    message: yaml.load with the full Loader can construct arbitrary objects.
+    pattern: yaml.load(..., Loader=yaml.Loader)
+    metadata: { cwe: CWE-502 }
